@@ -52,32 +52,54 @@ VOLUME_GRAFANA_DATA=./grafana/data
 VOLUME_GRAFANA_CERTS=../PATH/TO/CERTS
 
 ```
-Iniciando os Serviços
-Para iniciar todos os serviços definidos no Docker Compose, execute o seguinte comando no terminal:
 
+Iniciando os Serviços
+---------------------
+
+Para iniciar todos os serviços definidos no Docker Compose, execute o seguinte comando no terminal:
+```
 docker-compose up -d
+```
 
 Acesso aos Serviços
-Zabbix Frontend: Acesse http://<SEU_DOMINIO>:80 ou https://<SEU_DOMINIO>:443 para o frontend do Zabbix.
-Grafana: Acesse http://<SEU_DOMINIO>:3000 para o Grafana.
+--------------------
+Zabbix Frontend: 
 
-Configuração Pós-Instalação
+Frontend do Zabbix.
+```
+http://<SEU_DOMINIO>:80 ou https://<SEU_DOMINIO>:443
+```
+Grafana: 
+```
+http://<SEU_DOMINIO>:3000
+```
+
+
+Configuração Pós-Instalação:
+-----------------------
+
 Siga as instruções de configuração específicas do Zabbix e Grafana para concluir a configuração dos serviços.
 Configure dashboards no Grafana conforme necessário para visualizar os dados de monitoramento.
 
-Manutenção
-Backup e Restauração
+
+Manutenção:
+------------------------
+
+Backup e Restauração:
+
 MySQL: Faça backup do volume de dados MySQL regularmente.
 Zabbix: Faça backup das configurações personalizadas e scripts.
 Grafana: Faça backup dos dashboards e fontes de dados.
 
-Atualização
+Atualização:
+------------------------
 Para atualizar para novas versões dos serviços, ajuste as imagens no arquivo docker-compose.yml e execute:
 docker-compose down
 docker-compose pull
 docker-compose up -d
 
-Suporte
+Suporte:
+------------------------
 Para suporte, consulte a documentação oficial dos serviços utilizados ou abra uma issue neste repositório.
 
 Este README oferece uma visão geral básica para iniciar o projeto. Ajuste conforme necessário para atender aos requisitos específicos do seu ambiente.
