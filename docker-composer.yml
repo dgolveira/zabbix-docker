@@ -1,0 +1,109 @@
+version: '3.9'
+
+services:
+  db_zabbix:
+    image: mysql:${MYSQL_VERSION}
+    container_name: ${CONTAINER_NAME_MYSQL}
+    hostname: ${HOSTNAME_MYSQL}
+    restart: always
+    command:
+      - --character-set-server=utf8
+      - --collation-server=utf8_bin
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ${VOLUME_MYSQL_DATA}:/var/lib/mysql
+      - ${VOLUME_MYSQL_INITDB}:/docker-entrypoint-initdb.d
+    networks:
+      - web
+
+  zabbix-server:
+    depends_on:
+      - db_zabbix
+    image: ${ZABBIX_SERVER_IMAGE}
+    container_name: ${CONTAINER_NAME_ZABBIX_SERVER}
+    hostname: ${HOSTNAME_ZABBIX_SERVER}
+    restart: unless-stopped
+    expose:
+      - 10051
+    environment:
+      DB_SERVER_HOST: ${DB_SERVER_HOST}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ZBX_ALLOWUNSUPPORTEDDBVERSIONS: ${ZBX_ALLOWUNSUPPORTEDDBVERSIONS}
+    volumes:
+      - ${VOLUME_ZABBIX_ALERTSCRIPTS}:/usr/lib/zabbix/alertscripts
+    networks:
+      - web
+
+  web_zbxsrvbr:
+    depends_on:
+      - zabbix-server
+      - db_zabbix
+    image: ${ZABBIX_WEB_IMAGE}
+    container_name: ${CONTAINER_NAME_ZABBIX_FRONTEND}
+    hostname: ${HOSTNAME_ZABBIX_WEB}
+    restart: always
+    expose:
+      - 80
+      - 443
+    environment:
+      ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
+      DB_SERVER_HOST: ${DB_SERVER_HOST}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      PHP_TZ: ${PHP_TZ}
+    volumes:
+      - ${VOLUME_NGINX_CONF}:/etc/zabbix/nginx.conf
+      - ${VOLUME_NGINX_CERTS}:/ssl/
+    networks:
+      - web
+
+  zabbix-agent-zbxsrvbr:
+    depends_on:
+      - zabbix-server
+      - db_zabbix
+    image: ${ZABBIX_AGENT_IMAGE}
+    container_name: ${CONTAINER_NAME_ZABBIX_AGENT}
+    hostname: ${HOSTNAME_ZABBIX_AGENT}
+    restart: always
+    environment:
+      ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
+      ZBX_ACTIVE_ALLOW: ${ZBX_ACTIVE_ALLOW}
+    expose:
+      - 10050
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUME_ZABBIX_PLUGINS}:/etc/zabbix/zabbix_agent2.d/plugins.d
+      - ${VOLUME_ZABBIX_SCRIPTS}:/etc/zabbix/zabbix_agent2.d/scripts
+    networks:
+      - web
+
+  grafana:
+    image: ${GRAFANA_IMAGE}
+    container_name: ${CONTAINER_NAME_GRAFANA}
+    restart: unless-stopped
+    user: '${GRAFANA_USER}'
+    expose:
+      - 3000
+    environment:
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL}
+      GF_SERVER_CERT_FILE: ${GF_SERVER_CERT_FILE}
+      GF_SERVER_CERT_KEY: ${GF_SERVER_CERT_KEY}
+      GF_SERVER_PROTOCOL: ${GF_SERVER_PROTOCOL}
+      GF_SERVER_HTTP_PORT: ${GF_SERVER_HTTP_PORT}
+    volumes:
+      - ${VOLUME_GRAFANA_CERTS}:/ssl/
+      - ${VOLUME_GRAFANA_DATA}:/var/lib/grafana
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
